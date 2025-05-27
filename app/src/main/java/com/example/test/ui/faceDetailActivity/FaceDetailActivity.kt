@@ -74,9 +74,11 @@ class FaceDetailActivity : ComponentActivity() {
                     .background(Color.Companion.White)
             ) {
                 Column {
-                    Row(modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                    ) {
                         Box(
                             modifier = Modifier
                                 .size(56.dp)

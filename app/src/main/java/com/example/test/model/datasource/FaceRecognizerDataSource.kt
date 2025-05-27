@@ -19,7 +19,9 @@ class FaceRecognizerDataSourceImpl @Inject constructor(
 ) : FaceRecognizerDataSource {
 
     override suspend fun detectFaces(uri: Uri): List<Face> {
-        val bitmap = uri.loadBitmap(context) ?: return emptyList()
+        val bitmap = uri.loadBitmap(
+            context = context
+        ) ?: return emptyList()
         val image = InputImage.fromBitmap(bitmap, 0)
         val detector = FaceDetection.getClient(
             FaceDetectorOptions.Builder()

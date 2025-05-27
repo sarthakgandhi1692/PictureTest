@@ -10,6 +10,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.launch
@@ -26,8 +27,16 @@ class MainActivityViewModel
     val allFacesFlow: StateFlow<List<ProcessedImage>> = _allFacesFlow
 
 
+    private val _hasPermission = MutableStateFlow(false)
+    val hasPermission: StateFlow<Boolean> = _hasPermission.asStateFlow()
+
+
+    fun updatePermissionState(isGranted: Boolean) {
+        _hasPermission.value = isGranted
+    }
+
     fun startObservingFaces() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             imageRepository.observeAllProcessedFaces()
                 .onEach { Log.d("FaceDao", "New face detected: ${it.uri}") }
                 .runningFold(emptyList<ProcessedImage>()) { acc, newImage ->
@@ -46,6 +55,7 @@ class MainActivityViewModel
 
     fun processImages() {
         viewModelScope.launch(Dispatchers.IO) {
+            updatePermissionState(true)
             startObservingFaces()
             imageProcessingUseCase.processImages()
         }

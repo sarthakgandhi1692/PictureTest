@@ -185,7 +185,11 @@ class MainActivity : ComponentActivity() {
                     )
                 }
 
-                GalleryFaceGrid()
+                val hasPermission by viewModel.hasPermission.collectAsState()
+
+                if (hasPermission) {
+                    GalleryFaceGrid()
+                }
 
             }
         }

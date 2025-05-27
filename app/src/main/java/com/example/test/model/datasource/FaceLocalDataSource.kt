@@ -12,9 +12,9 @@ import com.example.test.model.room.dao.FaceDao
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.flatMapConcat
-import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -33,33 +33,42 @@ class FaceLocalDataSourceImpl @Inject constructor(
     private val faceDao: FaceDao
 ) : FaceLocalDataSource {
 
-    override fun observeAllFaces(): Flow<ProcessedImage> =
-        faceDao.getAllFacesFlow()
+    val emittedUris = mutableSetOf<String>()
+
+    override fun observeAllFaces(): Flow<ProcessedImage> {
+        emittedUris.clear()
+        return faceDao.getAllFacesFlow()
             .flatMapConcat { imageEntities ->
-                imageEntities.asFlow().mapNotNull { entity ->
-                    try {
-                        val bitmap = withContext(Dispatchers.IO) {
-                            entity.imageUri.toUri().loadBitmap(context)
-                        } ?: return@mapNotNull null
+                Log.e("Processing", "Processing started for ${imageEntities.size}")
+                flow {
+                    for (entity in imageEntities) {
+                        if (entity.imageUri in emittedUris) continue
+                        try {
+                            val bitmap = entity.imageUri.toUri().loadBitmap(
+                                context = context
+                            ) ?: continue
+                            val processedBitmap = drawFacesOnBitmap(bitmap, entity.faces)
 
-                        val processedBitmap = drawFacesOnBitmap(bitmap, entity.faces)
-                        val processedImage = ProcessedImage(
-                            uri = entity.imageUri,
-                            bitmap = processedBitmap,
-                            timestamp = entity.timestamp,
-                            faces = entity.faces
-                        )
-
-                        Log.d("Repository", "Emitting ProcessedImage for URI: ${entity.imageUri}")
-                        processedImage
-                    } catch (e: Exception) {
-                        Log.e("Repository", "Error processing image ${entity.imageUri}", e)
-                        null
+                            emittedUris.add(entity.imageUri)
+                            Log.e("Processing", "Processed started for id:::: ${entity.imageUri}")
+                            emit(
+                                ProcessedImage(
+                                    uri = entity.imageUri,
+                                    bitmap = processedBitmap,
+                                    timestamp = entity.timestamp,
+                                    faces = entity.faces
+                                )
+                            )
+                        } catch (e: Exception) {
+                            Log.e("Repository", "Error processing image ${entity.imageUri}", e)
+                        }
                     }
-                }
+                }.flowOn(Dispatchers.IO)
             }
+    }
 
     override suspend fun insertFace(faces: ImageWithFacesEntity) {
+        emittedUris.remove(faces.imageUri)
         faceDao.insertFace(faces)
     }
 
@@ -74,7 +83,7 @@ class FaceLocalDataSourceImpl @Inject constructor(
         val paint = android.graphics.Paint().apply {
             color = android.graphics.Color.RED
             style = android.graphics.Paint.Style.STROKE
-            strokeWidth = 10f
+            strokeWidth = 5f
         }
 
         for (face in faces) {
