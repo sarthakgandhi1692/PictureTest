@@ -3,7 +3,6 @@ package com.example.test.ui.mainActivity
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.test.domain.AddFaceNameUseCase
 import com.example.test.domain.ImageProcessingUseCase
 import com.example.test.model.local.ProcessedImage
 import com.example.test.model.repository.ImageRepository

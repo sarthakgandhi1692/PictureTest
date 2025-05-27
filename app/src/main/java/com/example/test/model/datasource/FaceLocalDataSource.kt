@@ -14,7 +14,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.flatMapConcat
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -36,7 +35,7 @@ class FaceLocalDataSourceImpl @Inject constructor(
 
     override fun observeAllFaces(): Flow<ProcessedImage> =
         faceDao.getAllFacesFlow()
-            .flatMapLatest { imageEntities ->
+            .flatMapConcat { imageEntities ->
                 imageEntities.asFlow().mapNotNull { entity ->
                     try {
                         val bitmap = withContext(Dispatchers.IO) {

@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -100,7 +99,7 @@ class MainActivity : ComponentActivity() {
             .setPositiveButton("Try Again") { _, _ ->
                 requestPermissionLauncher.launch(permission)
             }
-            .setNegativeButton("Cancel") { _,_->
+            .setNegativeButton("Cancel") { _, _ ->
                 requestPermissionLauncher.launch(permission)
             }
             .show()

@@ -74,7 +74,9 @@ class FaceDetailActivity : ComponentActivity() {
                     .background(Color.Companion.White)
             ) {
                 Column {
-                    Row(modifier = Modifier.fillMaxWidth().height(56.dp)) {
+                    Row(modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)) {
                         Box(
                             modifier = Modifier
                                 .size(56.dp)
@@ -93,7 +95,9 @@ class FaceDetailActivity : ComponentActivity() {
 
                         Text(
                             text = "Image details",
-                            modifier = Modifier.padding(start = 16.dp).align(Alignment.CenterVertically),
+                            modifier = Modifier
+                                .padding(start = 16.dp)
+                                .align(Alignment.CenterVertically),
                             color = Color.Black,
                             fontSize = 16.sp
                         )
