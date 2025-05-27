@@ -1,0 +1,16 @@
+app/.cxx/
+app/.externalNativeBuild/
+build/
+
+# Local configuration file (sdk path, etc)
+local.properties
+keys.properties
+
+*.iml
+*.DS_Store
+
+# Gradle files
+.gradle/
+
+## Directory-based project format:
+.idea/
