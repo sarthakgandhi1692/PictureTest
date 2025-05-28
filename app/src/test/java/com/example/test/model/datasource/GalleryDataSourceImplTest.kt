@@ -67,8 +67,8 @@ class GalleryDataSourceImplTest {
     @Test
     fun `getPhotosFromGallery returns correct list of images`() = runBlocking {
         // Given
-        val projection = arrayOf(MediaStore.Images.Media._ID, MediaStore.Images.Media.DATE_ADDED)
-        val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} ASC"
+        val projection = arrayOf(MediaStore.Images.Media._ID, MediaStore.Images.Media.DATE_TAKEN)
+        val sortOrder = "${MediaStore.Images.Media.DATE_TAKEN} DESC"
         val imageId = 1L
         val dateAdded = 1000L
         val expectedUri = mockk<Uri>()
@@ -85,7 +85,7 @@ class GalleryDataSourceImplTest {
 
         every { cursor.moveToNext() } returnsMany listOf(true, false)
         every { cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID) } returns 0
-        every { cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED) } returns 1
+        every { cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_TAKEN) } returns 1
         every { cursor.getLong(0) } returns imageId
         every { cursor.getLong(1) } returns dateAdded
         every { cursor.close() } just Runs
