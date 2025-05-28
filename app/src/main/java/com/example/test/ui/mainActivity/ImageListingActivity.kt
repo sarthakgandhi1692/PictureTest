@@ -1,17 +1,10 @@
 package com.example.test.ui.mainActivity
 
-import android.Manifest
-import android.app.AlertDialog
+import android.annotation.SuppressLint
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -35,12 +28,8 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,102 +38,58 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import androidx.core.graphics.scale
 import com.example.test.R
+import com.example.test.composeCommon.rememberScaledBitmap
 import com.example.test.composeCommon.shimmerBrush
 import com.example.test.model.local.ProcessedImage
 import com.example.test.ui.faceDetailActivity.FaceDetailActivity
+import com.example.test.utils.PermissionUtil
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
+/**
+ * MainActivity for the app.
+ */
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+@SuppressLint("UnusedBoxWithConstraintsScope")
+class ImageListingActivity : ComponentActivity() {
 
-    private val viewModel: MainActivityViewModel by viewModels()
+    private val viewModel: ImageListingActivityViewModel by viewModels()
+    private var navigatedToSettingsForPermission = false
 
-    private var navigatedToSettings = false
-
-    private val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        Manifest.permission.READ_MEDIA_IMAGES
-    } else {
-        Manifest.permission.READ_EXTERNAL_STORAGE
-    }
-
-    private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            viewModel.processImages()
-        } else {
-            // Check if we should show a rationale or send user to settings
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
-                showRationaleDialog()
-            } else {
-                // User checked "Don't ask again", redirect to settings
-                showSettingsDialog()
-            }
-        }
-    }
-
-    private fun showRationaleDialog() {
-        AlertDialog.Builder(this)
-            .setTitle("Permission Required")
-            .setMessage("We need access to your storage to load and process images.")
-            .setPositiveButton("Try Again") { _, _ ->
-                requestPermissionLauncher.launch(permission)
-            }
-            .setNegativeButton("Cancel") { _, _ ->
-                requestPermissionLauncher.launch(permission)
-            }
-            .show()
-    }
-
-    private fun showSettingsDialog() {
-        AlertDialog.Builder(this)
-            .setTitle("Permission Required")
-            .setMessage("Permission was denied permanently. Please go to Settings to enable it.")
-            .setCancelable(false)
-            .setPositiveButton("Open Settings") { _, _ ->
-                navigatedToSettings = true
-                val intent = Intent(
-                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                    Uri.fromParts("package", packageName, null)
-                )
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                startActivity(intent)
-            }
-            .show()
-    }
+    @Inject
+    lateinit var permissionUtil: PermissionUtil
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (ContextCompat.checkSelfPermission(
-                this,
-                permission
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            viewModel.processImages()
-        } else {
-            requestPermissionLauncher.launch(permission)
-        }
+        // Request necessary permissions when the activity is created.
+        requestPermission()
         setContent {
-            MainContent(
-                viewModel.state
-            )
+            MainContent()
         }
     }
 
-    @Preview
+    /**
+     * Requests necessary permissions for the app.
+     */
+    private fun requestPermission() {
+        permissionUtil.requestMediaPermission(
+            this@ImageListingActivity, onGranted = {
+                viewModel.updatePermissionState(true)
+                viewModel.processImages()
+            }, onSettingsOpened = {
+                navigatedToSettingsForPermission = true
+            })
+    }
+
     @Composable
-    fun MainContent(
-        state: MainActivityState? = MainActivityState()
-    ) {
+    fun MainContent() {
+        // Observe permission status from ViewModel.
+        val hasPermission by viewModel.hasPermission
+
         Box(
             modifier = Modifier.Companion
                 .fillMaxSize()
@@ -152,8 +97,8 @@ class MainActivity : ComponentActivity() {
                 .navigationBarsPadding()
                 .background(Color.Companion.White)
         ) {
-
             Column {
+                // Top app bar with back button and title.
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -176,7 +121,7 @@ class MainActivity : ComponentActivity() {
                     }
 
                     Text(
-                        text = "Image List",
+                        text = stringResource(R.string.image_list),
                         modifier = Modifier
                             .padding(start = 16.dp)
                             .align(Alignment.CenterVertically),
@@ -185,8 +130,7 @@ class MainActivity : ComponentActivity() {
                     )
                 }
 
-                val hasPermission by viewModel.hasPermission.collectAsState()
-
+                // Display gallery grid if permission is granted.
                 if (hasPermission) {
                     GalleryFaceGrid()
                 }
@@ -196,13 +140,16 @@ class MainActivity : ComponentActivity() {
 
     }
 
+    // Composable function to display the grid of face images.
     @Composable
     fun GalleryFaceGrid() {
         val faceImages by viewModel.allFacesFlow.collectAsState()
 
+        // Show shimmer loading effect if images are not yet loaded.
         if (faceImages.isEmpty()) {
             CustomShimmerGrid()
         } else {
+            // Display the grid of images once loaded.
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -218,6 +165,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Composable function to display a grid of shimmer items.
+     * @param itemCount Number of items to display in the grid.
+     * @param columns Number of columns in the grid.
+     */
     @Composable
     fun CustomShimmerGrid(
         itemCount: Int = 20,
@@ -225,6 +177,7 @@ class MainActivity : ComponentActivity() {
     ) {
         val brush = shimmerBrush()
 
+        // LazyVerticalGrid for efficient display of shimmer items.
         LazyVerticalGrid(
             columns = GridCells.Fixed(columns),
             contentPadding = PaddingValues(8.dp),
@@ -244,60 +197,57 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Composable function to display an image with face overlays.
+     * @param processedImage Processed image data.
+     */
     @Composable
     fun FaceOverlayCanvas(processedImage: ProcessedImage) {
-        val originalBitmap = processedImage.bitmap
-        var scaledBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
+        // BoxWithConstraints to get the available width for scaling the image.
         BoxWithConstraints(
-            modifier = Modifier.Companion
+            modifier = Modifier
                 .fillMaxWidth()
                 .height(128.dp)
                 .clickable {
-                    startActivity(Intent(this@MainActivity, FaceDetailActivity::class.java).apply {
-                        putExtra("imageUri", processedImage.uri)
-                    })
+                    startActivity(
+                        Intent(
+                            this,
+                            FaceDetailActivity::class.java
+                        ).apply {
+                            putExtra(ARG_IMAGE_URI, processedImage.uri)
+                        })
                 }
         ) {
-            val maxWidth = this.maxWidth
+            // Calculate width in pixels.
             val widthPx = with(LocalDensity.current) { maxWidth.toPx() }
+            val scaledBitmap = rememberScaledBitmap(processedImage.bitmap, widthPx)
 
-            // Downscale bitmap off the main thread
-            LaunchedEffect(originalBitmap, maxWidth) {
-                withContext(Dispatchers.IO) {
-                    val aspectRatio = originalBitmap.width.toFloat() / originalBitmap.height
-                    val targetHeightPx = (widthPx / aspectRatio).toInt()
-                    val downscaled = originalBitmap.scale(widthPx.toInt(), targetHeightPx)
-                    scaledBitmap = downscaled
-                }
+            // Display the scaled bitmap.
+            scaledBitmap?.let { bitmap ->
+                Image(
+                    bitmap = bitmap.asImageBitmap(),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop
+                )
             }
-
-        }
-
-        scaledBitmap?.let { bitmap ->
-            Image(
-                bitmap = bitmap.asImageBitmap(),
-                contentDescription = "",
-                contentScale = ContentScale.Companion.Crop
-            )
         }
     }
 
+
+    // Called when the activity is becoming visible to the user.
     override fun onStart() {
         super.onStart()
-        if (navigatedToSettings) {
-            navigatedToSettings = false
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    permission
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                viewModel.processImages()
-            } else {
-                requestPermissionLauncher.launch(permission)
-            }
+        if (navigatedToSettingsForPermission) {
+            // If navigated back from settings, re-request permission.
+            navigatedToSettingsForPermission = false
+            requestPermission()
         }
     }
 
+
+    companion object {
+        private const val ARG_IMAGE_URI = "ARG_IMAGE_URI"
+    }
 
 }

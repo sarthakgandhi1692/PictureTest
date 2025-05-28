@@ -5,32 +5,45 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.test.model.entity.ImageWithFacesEntity
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface FaceDao {
 
+    /**
+     * Retrieves all images with associated faces from the database.
+     * @return A list of [ImageWithFacesEntity] objects.
+     */
     @Query("SELECT * FROM faceImages ORDER BY timestamp ASC")
-    fun getAllFacesFlow(): Flow<List<ImageWithFacesEntity>>
+    suspend fun getAllImages(): List<ImageWithFacesEntity>
 
-    @Query("SELECT COUNT(*) FROM faceImages")
-    fun getFacesCount(): Flow<Int>
-
+    /**
+     * Inserts a face into the database.
+     * @param face The face to insert.
+     * @return The ID of the inserted face.
+     */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertFace(face: ImageWithFacesEntity)
+    suspend fun insertFace(face: ImageWithFacesEntity): Long
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertImageWithfaces(faces: List<ImageWithFacesEntity>)
+    /**
+     * Retrieves faces associated with a specific image from the database.
+     * @param imageUri The URI of the image.
+     */
+    @Query("SELECT * FROM faceImages WHERE image_uri = :imageUri")
+    suspend fun getFacesForImage(imageUri: String): ImageWithFacesEntity?
 
-    @Query("SELECT * FROM faceImages WHERE imageUri = :imageUri")
-    suspend fun getFacesForImage(imageUri: String): ImageWithFacesEntity
-
-    @Query("DELETE FROM faceImages WHERE imageUri = :imageUri")
-    suspend fun deleteFacesForImage(imageUri: String)
-
-    @Query("DELETE FROM faceImages")
-    suspend fun deleteAllFaces()
-
-    @Query("SELECT EXISTS(SELECT 1 FROM faceImages WHERE imageUri = :uri LIMIT 1)")
+    /**
+     * Checks if an image with the given URI has been processed.
+     * @param uri The URI of the image to check.
+     * @return True if the image has been processed, false otherwise.
+     */
+    @Query("SELECT EXISTS(SELECT 1 FROM faceImages WHERE image_uri = :uri LIMIT 1)")
     suspend fun isImageProcessed(uri: String): Boolean
+
+    /**
+     * Deletes images with the specified URIs from the database.
+     * @param uris The list of URIs of images to delete.
+     */
+    @Query("DELETE FROM faceImages WHERE image_uri IN (:uris)")
+    suspend fun deleteImagesByUris(uris: List<String>): Int
+
 }

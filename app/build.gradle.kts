@@ -79,7 +79,6 @@ dependencies {
     implementation(libs.kotlinx.coroutines.play.services)
 
 
-
     // Moshi
     implementation(libs.moshi)
     implementation(libs.moshi.kotlin)

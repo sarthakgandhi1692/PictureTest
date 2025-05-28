@@ -11,6 +11,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
+/**
+ * Creates a shimmer brush for a loading effect.
+ */
 @Composable
 fun shimmerBrush(): Brush {
     val transition = rememberInfiniteTransition()

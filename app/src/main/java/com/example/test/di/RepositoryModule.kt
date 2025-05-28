@@ -1,7 +1,6 @@
 package com.example.test.di
 
 import com.example.test.model.datasource.FaceLocalDataSource
-import com.example.test.model.datasource.FaceRecognizerDataSource
 import com.example.test.model.datasource.GalleryDataSource
 import com.example.test.model.repository.ImageRepository
 import com.example.test.model.repository.ImageRepositoryImpl
@@ -20,13 +19,10 @@ class RepositoryModule {
     fun provideTestRepository(
         faceLocalDataSource: FaceLocalDataSource,
         galleryDataSource: GalleryDataSource,
-        faceRecognizerDataSource: FaceRecognizerDataSource
-
     ): ImageRepository {
         return ImageRepositoryImpl(
             faceLocalDataSource = faceLocalDataSource,
-            galleryDataSource = galleryDataSource,
-            faceRecognizerDataSource = faceRecognizerDataSource
+            galleryDataSource = galleryDataSource
         )
     }
 }
