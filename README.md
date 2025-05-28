@@ -15,7 +15,7 @@ Here are some of the things I've implemented or am planning to implement:
 *   I've worked on managing the necessary permissions for accessing images.
 *   Tagging is available for different faces which is then persisted.
 
-Looking at my `MainActivityViewModel.kt`, I've set it up to:
+Looking at my `ImageListingActivityViewModel.kt`, I've set it up to:
 *   Keep an eye on and display a list of images that have been processed, possibly highlighting any faces I've found.
 *   Handle runtime permissions, which I need for things like accessing photos from storage or using the camera.
 *   Process images in the background so the app stays responsive.
