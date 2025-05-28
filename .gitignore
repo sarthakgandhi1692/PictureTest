@@ -1,4 +1,5 @@
 app/.cxx/
+app/release
 app/.externalNativeBuild/
 build/
 
