@@ -1,11 +1,13 @@
 [versions]
 
 agp = "8.9.3"
+coreTesting = "2.2.0"
 hiltAndroid = "2.51.1"
 kotlin = "2.0.21"
 coreKtx = "1.16.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
+kotlinxCoroutinesTest = "1.8.0"
 ksp = "2.0.21-1.0.27"
 espressoCore = "3.6.1"
 kotlinxCoroutinesPlayServices = "1.9.0"
@@ -15,13 +17,22 @@ composeBom = "2025.05.01"
 kotlinx-coroutines = "1.9.0"
 coil = "2.5.0"
 mlkit-face-detection = "16.1.7"
+mockitoCore = "5.10.0"
+mockitoKotlin = "5.2.1"
+mockk = "1.13.12"
+mockkAgent = "1.13.12"
+mockkAndroid = "1.13.12"
+robolectric = "4.11.1"
 room = "2.7.1"
 gson = "2.10.1"
+kotlin-test = "2.0.21"
+junitKtx = "1.2.1"
 
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 
+androidx-core-testing = { module = "androidx.arch.core:core-testing", version.ref = "coreTesting" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroid" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -46,6 +57,7 @@ kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-c
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
 
 #ml kit
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
 mlkit-face-detection = { module = "com.google.mlkit:face-detection", version.ref = "mlkit-face-detection" }
 
 #room
@@ -53,8 +65,18 @@ room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 
+#testing
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockitoCore" }
+mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockitoKotlin" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+mockk-agent = { module = "io.mockk:mockk-agent", version.ref = "mockkAgent" }
+mockk-android = { module = "io.mockk:mockk-android", version.ref = "mockkAndroid" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin-test" }
+
 #gson
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+androidx-junit-ktx = { group = "androidx.test.ext", name = "junit-ktx", version.ref = "junitKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

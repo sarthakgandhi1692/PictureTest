@@ -11,7 +11,6 @@ import android.os.Build
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
-
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.test.R
@@ -20,6 +19,116 @@ import com.example.test.R
  * Utility class for handling media permissions.
  */
 class PermissionUtil {
+
+    /**
+     * Requests media permission from the user.
+     * @param activity The component activity requesting the permission.
+     */
+    fun requestMediaPermission(
+        activity: ComponentActivity,
+        onGranted: () -> Unit,
+        onLimitedAccess: () -> Unit,
+        onSettingsOpened: () -> Unit
+    ) {
+        val permission = getMediaPermission()
+
+        // Check current permission state
+        val permissionState = checkPermissionState(activity)
+        when (permissionState) {
+            PermissionState.FULL_ACCESS -> {
+                onGranted()
+                return
+            }
+            PermissionState.LIMITED_ACCESS -> {
+                onLimitedAccess()
+                return
+            }
+            PermissionState.NO_ACCESS -> {
+                // Need to request permission
+                val permissionLauncher = activity.activityResultRegistry.register(
+                    getPermissionRequestKey(),
+                    ActivityResultContracts.RequestPermission()
+                ) { isGranted ->
+                    if (isGranted) {
+                        when (checkPermissionState(activity)) {
+                            PermissionState.FULL_ACCESS -> onGranted()
+                            PermissionState.LIMITED_ACCESS -> {
+                                onLimitedAccess()
+                            }
+                            PermissionState.NO_ACCESS -> {
+                                handlePermissionDenied(
+                                    activity = activity,
+                                    permission = permission,
+                                    onSettingsOpened = onSettingsOpened,
+                                    onRetry = {
+                                        requestMediaPermission(
+                                            activity = activity,
+                                            onGranted = onGranted,
+                                            onLimitedAccess = onLimitedAccess,
+                                            onSettingsOpened = onSettingsOpened
+                                        )
+                                    }
+                                )
+                            }
+                        }
+                    } else {
+                        handlePermissionDenied(
+                            activity = activity,
+                            permission = permission,
+                            onSettingsOpened = onSettingsOpened,
+                            onRetry = {
+                                requestMediaPermission(
+                                    activity = activity,
+                                    onGranted = onGranted,
+                                    onLimitedAccess = onLimitedAccess,
+                                    onSettingsOpened = onSettingsOpened
+                                )
+                            }
+                        )
+                    }
+                }
+                permissionLauncher.launch(permission)
+            }
+        }
+    }
+
+    private fun checkPermissionState(activity: ComponentActivity): PermissionState {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val hasImageAccess = ContextCompat.checkSelfPermission(
+                activity,
+                Manifest.permission.READ_MEDIA_IMAGES
+            ) == PackageManager.PERMISSION_GRANTED
+            val hasVideoAccess = ContextCompat.checkSelfPermission(
+                activity,
+                Manifest.permission.READ_MEDIA_VIDEO
+            ) == PackageManager.PERMISSION_GRANTED
+            val hasAudioAccess = ContextCompat.checkSelfPermission(
+                activity,
+                Manifest.permission.READ_MEDIA_AUDIO
+            ) == PackageManager.PERMISSION_GRANTED
+
+            return when {
+                hasImageAccess && hasVideoAccess && hasAudioAccess -> PermissionState.FULL_ACCESS
+                hasImageAccess || hasVideoAccess || hasAudioAccess -> PermissionState.LIMITED_ACCESS
+                else -> PermissionState.NO_ACCESS
+            }
+        } else {
+            // Pre-Android 11: only full or no access possible
+            return if (isMediaPermissionGranted(activity)) {
+                PermissionState.FULL_ACCESS
+            } else {
+                PermissionState.NO_ACCESS
+            }
+        }
+    }
+
+    fun isMediaPermissionGranted(activity: ComponentActivity): Boolean {
+        val permission = getMediaPermission()
+        return ContextCompat.checkSelfPermission(
+            activity,
+            permission
+        ) == PackageManager.PERMISSION_GRANTED
+    }
 
     /**
      * Retrieves the appropriate media permission based on the Android SDK version.
@@ -31,59 +140,6 @@ class PermissionUtil {
         } else {
             Manifest.permission.READ_EXTERNAL_STORAGE
         }
-    }
-
-    /**
-     * Requests media permission from the user.
-     * @param activity The component activity requesting the permission.
-     */
-    fun requestMediaPermission(
-        activity: ComponentActivity,
-        onGranted: () -> Unit,
-        onSettingsOpened: () -> Unit
-    ) {
-        val permission = getMediaPermission()
-
-        // If already granted
-        if (isMediaPermissionGranted(activity)) {
-            onGranted()
-            return
-        }
-
-        // Register launcher dynamically
-        val launcher = activity.activityResultRegistry.register(
-            getPermissionRequestKey(),
-            ActivityResultContracts.RequestPermission()
-        ) { isGranted ->
-            if (isGranted) {
-                onGranted()
-            } else {
-                handlePermissionDenied(
-                    activity = activity,
-                    permission = permission,
-                    onSettingsOpened = onSettingsOpened,
-                    onRetry = {
-                        requestMediaPermission(
-                            activity = activity,
-                            onGranted = onGranted,
-                            onSettingsOpened = onSettingsOpened
-                        )
-                    }
-                )
-            }
-        }
-
-        launcher.launch(permission)
-    }
-
-    fun isMediaPermissionGranted(
-        activity: ComponentActivity
-    ): Boolean {
-        val permission = getMediaPermission()
-        return ContextCompat.checkSelfPermission(
-            activity,
-            permission
-        ) == PackageManager.PERMISSION_GRANTED
     }
 
     /**
@@ -145,6 +201,12 @@ class PermissionUtil {
      */
     private fun getPermissionRequestKey(): String {
         return "media_permission_request_${System.currentTimeMillis()}"
+    }
+
+    private enum class PermissionState {
+        FULL_ACCESS,
+        LIMITED_ACCESS,
+        NO_ACCESS
     }
 
     /**

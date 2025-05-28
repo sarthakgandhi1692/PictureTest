@@ -243,6 +243,7 @@ class ImageRepositoryImpl @Inject constructor(
 
     /**
      * Cleans up orphaned images from the database.
+     * Ideally to be added in a background task runner like [WorkManager] to update the database
      */
     override suspend fun cleanupOrphanedImages() {
         withContext(Dispatchers.IO) {

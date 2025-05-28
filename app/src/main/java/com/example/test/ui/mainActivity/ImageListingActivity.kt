@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -67,10 +68,7 @@ class ImageListingActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Request necessary permissions when the activity is created.
-        if (permissionUtil.isMediaPermissionGranted(this)) {
-            viewModel.updatePermissionState(true)
-            viewModel.processImages()
-        }
+        requestPermission()
         setContent {
             MainContent()
         }
@@ -81,10 +79,15 @@ class ImageListingActivity : ComponentActivity() {
      */
     private fun requestPermission() {
         permissionUtil.requestMediaPermission(
-            this@ImageListingActivity, onGranted = {
+            activity = this@ImageListingActivity,
+            onGranted = {
                 viewModel.updatePermissionState(true)
                 viewModel.processImages()
-            }, onSettingsOpened = {
+            }, onLimitedAccess = {
+                viewModel.updatePermissionState(true)
+                viewModel.processImages()
+            },
+            onSettingsOpened = {
                 navigatedToSettingsForPermission = true
             })
     }
@@ -145,17 +148,29 @@ class ImageListingActivity : ComponentActivity() {
                             .padding(16.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .background(Color.Blue)
-                                .clickable { requestPermission() }
-                                .padding(16.dp)
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.align(Alignment.Center)
                         ) {
-                            Text(
-                                text = stringResource(R.string.get_started),
-                                color = Color.White
+                            Image(
+                                modifier = Modifier.size(100.dp),
+                                painter = painterResource(R.drawable.face_recongnizer),
+                                contentDescription = ""
                             )
+
+                            Box(
+                                modifier = Modifier
+                                    .padding(top = 16.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.Blue)
+                                    .clickable { requestPermission() }
+                                    .padding(16.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.get_started),
+                                    color = Color.White
+                                )
+                            }
                         }
                     }
                 }
@@ -177,14 +192,20 @@ class ImageListingActivity : ComponentActivity() {
             // Display the grid of images once loaded.
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.Companion
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier
                     .fillMaxSize()
-                    .padding(4.dp)
             ) {
                 items(faceImages) { processedImage ->
-                    FaceOverlayCanvas(processedImage)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(1f)
+                    ) {
+                        FaceOverlayCanvas(processedImage)
+                    }
                 }
             }
         }
@@ -205,16 +226,16 @@ class ImageListingActivity : ComponentActivity() {
         // LazyVerticalGrid for efficient display of shimmer items.
         LazyVerticalGrid(
             columns = GridCells.Fixed(columns),
-            contentPadding = PaddingValues(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.Companion.fillMaxSize()
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.fillMaxSize()
         ) {
             items(itemCount) {
                 Box(
                     modifier = Modifier.Companion
                         .fillMaxWidth()
-                        .height(128.dp)
+                        .aspectRatio(1f)
                         .clip(RoundedCornerShape(8.dp))
                         .background(brush)
                 )
@@ -228,12 +249,9 @@ class ImageListingActivity : ComponentActivity() {
      */
     @Composable
     fun FaceOverlayCanvas(processedImage: ProcessedImage) {
-
-        // BoxWithConstraints to get the available width for scaling the image.
         BoxWithConstraints(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(128.dp)
+                .fillMaxSize()
                 .clickable {
                     startActivity(
                         Intent(
@@ -253,7 +271,10 @@ class ImageListingActivity : ComponentActivity() {
                 Image(
                     bitmap = bitmap.asImageBitmap(),
                     contentDescription = null,
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(8.dp))
                 )
             }
         }
