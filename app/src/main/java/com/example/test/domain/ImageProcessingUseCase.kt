@@ -14,7 +14,7 @@ class ImageProcessingUseCase @Inject constructor(
      * Processes all images available in the repository.
      * This is a suspend function, indicating it performs asynchronous operations.
      */
-    suspend fun processImages() {
+    suspend operator fun invoke() {
         imageRepository.processAllImages()
     }
 }

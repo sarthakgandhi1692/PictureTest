@@ -2,6 +2,7 @@ package com.example.test.di
 
 import com.example.test.model.datasource.FaceLocalDataSource
 import com.example.test.model.datasource.GalleryDataSource
+import com.example.test.model.datasource.ImageCacheDataSource
 import com.example.test.model.repository.ImageRepository
 import com.example.test.model.repository.ImageRepositoryImpl
 import dagger.Module
@@ -19,10 +20,12 @@ class RepositoryModule {
     fun provideTestRepository(
         faceLocalDataSource: FaceLocalDataSource,
         galleryDataSource: GalleryDataSource,
+        imageCacheDataSource: ImageCacheDataSource
     ): ImageRepository {
         return ImageRepositoryImpl(
             faceLocalDataSource = faceLocalDataSource,
-            galleryDataSource = galleryDataSource
+            galleryDataSource = galleryDataSource,
+            imageCacheDataSource = imageCacheDataSource
         )
     }
 }

@@ -2,9 +2,9 @@ package com.example.test.model.repository
 
 import android.graphics.Rect
 import android.util.Log
-import androidx.collection.LruCache
 import com.example.test.model.datasource.FaceLocalDataSource
 import com.example.test.model.datasource.GalleryDataSource
+import com.example.test.model.datasource.ImageCacheDataSource
 import com.example.test.model.entity.ImageWithFacesEntity
 import com.example.test.model.events.ProcessedFaceEvent
 import com.example.test.model.local.FaceInfo
@@ -45,9 +45,9 @@ interface ImageRepository {
 class ImageRepositoryImpl @Inject constructor(
     private val faceLocalDataSource: FaceLocalDataSource,
     private val galleryDataSource: GalleryDataSource,
+    private val imageCacheDataSource: ImageCacheDataSource
 ) : ImageRepository {
 
-    private val processedCache = LruCache<String, ProcessedImage>(50)
     private val _processedFaceUpdates = MutableSharedFlow<ProcessedFaceEvent>(
         replay = 0,
         extraBufferCapacity = 64
@@ -61,22 +61,22 @@ class ImageRepositoryImpl @Inject constructor(
     override fun observeAllProcessedFaces(): Flow<ProcessedImage> {
         return _processedFaceUpdates
             .onStart {
-                Log.d("ImageRepository", "Starting face observation")
+                Log.d(TAG, "Starting face observation")
                 emit(ProcessedFaceEvent.InitialLoad)
             }
             .flatMapConcat { event ->
                 when (event) {
                     is ProcessedFaceEvent.NewFaceAdded -> {
-                        Log.d("ImageRepository", "Processing new face: ${event.entity.imageUri}")
+                        Log.d(TAG, "Processing new face: ${event.entity.imageUri}")
                         processEntity(event.entity)
                     }
 
                     is ProcessedFaceEvent.FaceUpdated -> {
                         Log.d(
-                            "ImageRepository",
+                            TAG,
                             "Processing updated face: ${event.entity.imageUri}"
                         )
-                        processedCache.remove(event.entity.imageUri)
+                        imageCacheDataSource.deleteImageFromCache(uri = event.entity.imageUri)
                         processEntity(event.entity)
                     }
 
@@ -107,7 +107,6 @@ class ImageRepositoryImpl @Inject constructor(
      * @param uri The URI of the image.
      * @param dateAdded The timestamp when the image was added.
      * @param faceRects The list of face rectangles associated with the image.
-     * @throws Exception If an error occurs during insertion.
      */
     override suspend fun insertImageAndFaces(
         uri: String,
@@ -194,8 +193,9 @@ class ImageRepositoryImpl @Inject constructor(
      * @return A [ProcessedImage] object if found, null otherwise.
      */
     override suspend fun getProcessedImageByUri(uri: String): ProcessedImage? {
-        processedCache[uri]?.let { cached ->
-            Log.d("ImageRepository", "Found cached result for $uri")
+
+        imageCacheDataSource.getImageFromCache(uri = uri)?.let { cached ->
+            Log.d(TAG, "Found cached result for $uri")
             return cached
         }
 
@@ -206,11 +206,11 @@ class ImageRepositoryImpl @Inject constructor(
             }
             val result = faceLocalDataSource.processEntitySync(entity)
             result?.let {
-                processedCache.put(entity.imageUri, it)
+                imageCacheDataSource.addImageToCache(image = it)
             }
             result
         } catch (e: Exception) {
-            Log.e("ImageRepository", "Error processing image $uri", e)
+            Log.e(TAG, "Error processing image $uri", e)
             null
         }
     }
@@ -223,8 +223,8 @@ class ImageRepositoryImpl @Inject constructor(
     private fun processEntity(entity: ImageWithFacesEntity): Flow<ProcessedImage> {
         return flow {
             // Check cache first
-            processedCache[entity.imageUri]?.let { cached ->
-                Log.d("ImageRepository", "Found cached result for ${entity.imageUri}")
+            imageCacheDataSource.getImageFromCache(uri = entity.imageUri)?.let { cached ->
+                Log.d(TAG, "Found cached result for ${entity.imageUri}")
                 emit(cached)
                 return@flow
             }
@@ -232,18 +232,17 @@ class ImageRepositoryImpl @Inject constructor(
             try {
                 val result = faceLocalDataSource.processEntitySync(entity)
                 result?.let {
-                    processedCache.put(entity.imageUri, it)
+                    imageCacheDataSource.addImageToCache(image = it)
                     emit(it)
                 }
             } catch (e: Exception) {
-                Log.e("ImageRepository", "Error processing image ${entity.imageUri}", e)
+                Log.e(TAG, "Error processing image ${entity.imageUri}", e)
             }
         }.flowOn(Dispatchers.IO)
     }
 
     /**
      * Cleans up orphaned images from the database.
-     * @throws Exception If an error occurs during cleanup.
      */
     override suspend fun cleanupOrphanedImages() {
         withContext(Dispatchers.IO) {
@@ -262,7 +261,7 @@ class ImageRepositoryImpl @Inject constructor(
                 }
 
                 if (orphanedUris.isNotEmpty()) {
-                    Log.d("ImageCleanup", "Found ${orphanedUris.size} orphaned images")
+                    Log.d(TAG, "Found ${orphanedUris.size} orphaned images")
 
                     // Delete orphaned images from database
                     faceLocalDataSource.deleteImagesWithUri(orphanedUris.map {
@@ -270,14 +269,18 @@ class ImageRepositoryImpl @Inject constructor(
                     })
 
                     Log.d(
-                        "ImageCleanup",
+                        TAG,
                         "Deleted ${orphanedUris.size} orphaned images from database"
                     )
                 }
 
             } catch (e: Exception) {
-                Log.e("ImageCleanup", "Error cleaning up orphaned images", e)
+                Log.e(TAG, "Error cleaning up orphaned images", e)
             }
         }
+    }
+
+    companion object {
+        private const val TAG = "ImageRepository"
     }
 }

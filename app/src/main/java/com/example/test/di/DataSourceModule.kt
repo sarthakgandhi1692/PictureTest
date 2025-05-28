@@ -1,10 +1,12 @@
 package com.example.test.di
 
-import android.content.Context
+import android.content.ContentResolver
 import com.example.test.model.datasource.FaceLocalDataSource
 import com.example.test.model.datasource.FaceLocalDataSourceImpl
 import com.example.test.model.datasource.GalleryDataSource
 import com.example.test.model.datasource.GalleryDataSourceImpl
+import com.example.test.model.datasource.ImageCacheDataSource
+import com.example.test.model.datasource.ImageCacheDataSourceImpl
 import com.example.test.model.room.dao.FaceDao
 import com.example.test.utils.ImageUtils
 import com.google.mlkit.vision.face.FaceDetector
@@ -23,26 +25,32 @@ class DataSourceModule {
     @Provides
     @Singleton
     fun provideFaceLocalDataSource(
-        context: Context,
         faceDao: FaceDao,
-        imageUtils: ImageUtils
+        imageUtils: ImageUtils,
+        contentResolver: ContentResolver
     ): FaceLocalDataSource {
         return FaceLocalDataSourceImpl(
-            context = context,
             faceDao = faceDao,
-            imageUtils = imageUtils
+            imageUtils = imageUtils,
+            contentResolver = contentResolver
         )
     }
 
     @Provides
     @Singleton
     fun provideGalleryDataSource(
-        context: Context,
+        contentResolver: ContentResolver,
         faceDetector: FaceDetector
     ): GalleryDataSource {
         return GalleryDataSourceImpl(
-            context = context,
+            contentResolver = contentResolver,
             detector = faceDetector
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideImageCacheDataSource(): ImageCacheDataSource {
+        return ImageCacheDataSourceImpl()
     }
 }

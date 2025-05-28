@@ -18,7 +18,7 @@ class AddUpdateFaceNameUseCase @Inject constructor(
      * @param processedImage The processed image with the face name to be added or updated.
      * @return True if the operation was successful, false otherwise.
      */
-    suspend fun addUpdateFaceName(processedImage: ProcessedImage): Boolean {
+    suspend operator fun invoke(processedImage: ProcessedImage): Boolean {
         return imageRepository.updateFaceName(processedImage)
     }
 }

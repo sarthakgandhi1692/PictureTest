@@ -21,7 +21,7 @@ fun shimmerBrush(): Brush {
         initialValue = 0f,
         targetValue = 1000f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1200, easing = LinearEasing),
+            animation = tween(durationMillis = duration, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         )
     )
@@ -36,3 +36,5 @@ fun shimmerBrush(): Brush {
         end = Offset(x = translateAnim.value, y = translateAnim.value)
     )
 }
+
+private const val duration = 1200

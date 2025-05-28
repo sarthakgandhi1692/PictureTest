@@ -86,7 +86,7 @@ class ImageListingActivityViewModel
             // Ensure we are observing for new faces before processing
             startObservingFaces()
             // Start the image processing
-            imageProcessingUseCase.processImages()
+            imageProcessingUseCase()
         }
     }
 }

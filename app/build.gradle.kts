@@ -2,10 +2,9 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("kotlin-kapt")
-    id("com.google.dagger.hilt.android")
-    id("kotlin-parcelize")
-    id("com.google.devtools.ksp") version "2.0.21-1.0.27"
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.kotlin.parcelize)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -62,30 +61,13 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
     implementation(libs.hilt.android)
-    kapt(libs.hilt.android.compiler)
-
-    // Retrofit
-    implementation(libs.retrofit)
-    implementation(libs.okhttp)
-    implementation(libs.retrofit.scalars)
-    implementation(libs.retrofit.gson)
-    implementation(libs.retrofit.moshi)
-    implementation(libs.retrofit.coroutines.adapter)
-    implementation(libs.okhttp.logging.interceptor)
+    ksp(libs.hilt.android.compiler)
 
     // Image processing
     implementation(libs.mlkit.face.detection)
     implementation(libs.coil.compose)
     implementation(libs.kotlinx.coroutines.play.services)
 
-
-    // Moshi
-    implementation(libs.moshi)
-    implementation(libs.moshi.kotlin)
-    implementation(libs.moshi.adapter.rfc3339)
-
-    implementation(libs.kotshi.api)
-    kapt(libs.kotshi.compiler)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)
@@ -94,5 +76,9 @@ dependencies {
     // Room
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
-    kapt(libs.room.compiler)
+    ksp(libs.room.compiler)
+
+    // Gson
+    implementation(libs.gson)
+
 }

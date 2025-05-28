@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.text.TextUtils
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -70,7 +71,35 @@ class FaceDetailActivity : ComponentActivity() {
         viewModel.getProcessedImage(imageUri!!)
 
         setContent {
-            MainContent()
+            MainContent(
+                onNameUpdated = { index, name ->
+                    viewModel.saveName(index, name)
+                }
+            )
+        }
+
+        initObservers()
+    }
+
+    private fun initObservers() {
+        viewModel.uiEventsLiveData.observe(this) {
+            when (it) {
+                FaceDetailActivityViewModel.UIEvents.SHOW_ERROR_TOAST -> {
+                    Toast.makeText(
+                        this@FaceDetailActivity,
+                        getString(R.string.name_saved_successfully),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+                FaceDetailActivityViewModel.UIEvents.SHOW_SUCCESS_TOAST -> {
+                    Toast.makeText(
+                        this@FaceDetailActivity,
+                        getString(R.string.name_saved_successfully),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
         }
     }
 
@@ -78,7 +107,12 @@ class FaceDetailActivity : ComponentActivity() {
      * Main content of the activity.
      */
     @Composable
-    fun MainContent() {
+    fun MainContent(
+        onNameUpdated: (FaceInfo, String) -> Unit
+    ) {
+        val imageState = viewModel.imageState.value
+        val bitmap = imageState?.bitmap
+        val faces = imageState?.faces.orEmpty()
         Box(
             modifier = Modifier.Companion
                 .fillMaxSize()
@@ -124,8 +158,10 @@ class FaceDetailActivity : ComponentActivity() {
 
                 // Screen for displaying face details
                 FaceDetailScreen(
+                    originalBitmap = bitmap,
+                    faces = faces,
                     onNameUpdated = { index, name ->
-                        viewModel.saveName(index, name)
+                        onNameUpdated(index, name)
                     })
             }
 
@@ -139,13 +175,12 @@ class FaceDetailActivity : ComponentActivity() {
      */
     @Composable
     fun FaceDetailScreen(
+        originalBitmap: Bitmap?,
+        faces: List<FaceInfo>?,
         onNameUpdated: (FaceInfo, String) -> Unit
     ) {
-        // Get original bitmap from ViewModel
-        val originalBitmap = viewModel.imageState.value?.bitmap
-        if (originalBitmap == null) return
-        // Get faces from ViewModel
-        val faces = viewModel.imageState.value?.faces.orEmpty()
+        if (originalBitmap == null || faces == null) return
+
         // State for selected face and name input
         var selectedFace by remember { mutableStateOf<FaceInfo?>(null) }
         var nameInput by remember { mutableStateOf("") }

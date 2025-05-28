@@ -18,7 +18,7 @@ class GetProcessedImageByUriUseCase @Inject constructor(
      * @param uri The URI of the image to retrieve.
      * @return The [ProcessedImage] if found, or null otherwise.
      */
-    suspend fun getProcessedImageByUri(uri: String): ProcessedImage? {
+    suspend operator fun invoke(uri: String): ProcessedImage? {
         return imageRepository.getProcessedImageByUri(uri)
     }
 }

@@ -89,6 +89,7 @@ class ImageListingActivity : ComponentActivity() {
     fun MainContent() {
         // Observe permission status from ViewModel.
         val hasPermission by viewModel.hasPermission
+        val faceImages by viewModel.allFacesFlow.collectAsState()
 
         Box(
             modifier = Modifier.Companion
@@ -132,7 +133,7 @@ class ImageListingActivity : ComponentActivity() {
 
                 // Display gallery grid if permission is granted.
                 if (hasPermission) {
-                    GalleryFaceGrid()
+                    GalleryFaceGrid(faceImages = faceImages)
                 }
 
             }
@@ -142,9 +143,9 @@ class ImageListingActivity : ComponentActivity() {
 
     // Composable function to display the grid of face images.
     @Composable
-    fun GalleryFaceGrid() {
-        val faceImages by viewModel.allFacesFlow.collectAsState()
-
+    fun GalleryFaceGrid(
+        faceImages: List<ProcessedImage>
+    ) {
         // Show shimmer loading effect if images are not yet loaded.
         if (faceImages.isEmpty()) {
             CustomShimmerGrid()

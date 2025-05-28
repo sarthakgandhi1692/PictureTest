@@ -1,7 +1,7 @@
 package com.example.test.model.datasource
 
+import android.content.ContentResolver
 import android.content.ContentUris
-import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
 import com.example.test.base.loadBitmap
@@ -19,44 +19,47 @@ interface GalleryDataSource {
 
 /**
  * Implementation of the [GalleryDataSource] interface.
- * @property context The application context.
  * @property detector The ML Kit face detector.
  */
 class GalleryDataSourceImpl @Inject constructor(
-    private val context: Context,
-    private val detector: FaceDetector
+    private val detector: FaceDetector,
+    private val contentResolver: ContentResolver
 ) : GalleryDataSource {
 
     /**
      * Retrieves a list of images from the device's gallery.
      * @return A list of [ImagesWithDate] objects containing the image URI and timestamp.
-     * @throws Exception If an error occurs during retrieval.
      */
     override suspend fun getPhotosFromGallery(): List<ImagesWithDate> {
         val images = mutableListOf<ImagesWithDate>()
-        val projection = arrayOf(MediaStore.Images.Media._ID, MediaStore.Images.Media.DATE_ADDED)
-        val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} ASC"
+        try {
+            val projection =
+                arrayOf(MediaStore.Images.Media._ID, MediaStore.Images.Media.DATE_ADDED)
+            val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} ASC"
 
-        context.contentResolver.query(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            projection, null, null, sortOrder
-        )?.use { cursor ->
-            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
-            val dateColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED)
-            while (cursor.moveToNext()) {
-                val id = cursor.getLong(idColumn)
-                val dateAdded = cursor.getLong(dateColumn) * 1000L
-                val uri = ContentUris.withAppendedId(
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                    id
-                )
-                images.add(
-                    ImagesWithDate(
-                        uri = uri,
-                        timestamp = dateAdded
+            contentResolver.query(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                projection, null, null, sortOrder
+            )?.use { cursor ->
+                val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+                val dateColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED)
+                while (cursor.moveToNext()) {
+                    val id = cursor.getLong(idColumn)
+                    val dateAdded = cursor.getLong(dateColumn) * 1000L
+                    val uri = ContentUris.withAppendedId(
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        id
                     )
-                )
+                    images.add(
+                        ImagesWithDate(
+                            uri = uri,
+                            timestamp = dateAdded
+                        )
+                    )
+                }
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
         return images
     }
@@ -68,9 +71,7 @@ class GalleryDataSourceImpl @Inject constructor(
      * @throws Exception If an error occurs during face detection.
      */
     override suspend fun detectFaces(uri: Uri): List<Face> {
-        val bitmap = uri.loadBitmap(
-            context = context
-        ) ?: return emptyList()
+        val bitmap = uri.loadBitmap(contentResolver = contentResolver) ?: return emptyList()
         val image = InputImage.fromBitmap(bitmap, 0)
         return detector.process(image).await()
     }

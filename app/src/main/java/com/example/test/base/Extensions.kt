@@ -1,14 +1,17 @@
 package com.example.test.base
 
-import android.content.Context
+import android.content.ContentResolver
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.media.ExifInterface
 import android.net.Uri
 
-fun Uri.loadBitmap(context: Context, scalingFactor: Float = 0.1f): Bitmap? {
-    val contentResolver = context.contentResolver
+// Add method and class comments
+fun Uri.loadBitmap(
+    contentResolver: ContentResolver,
+    scalingFactor: Float = 0.1f
+): Bitmap? {
 
     // Step 1: Decode EXIF orientation
     val orientation = runCatching {

@@ -3,6 +3,7 @@ package com.example.test.model.local
 import android.graphics.Rect
 import androidx.room.TypeConverter
 import com.google.gson.Gson
+import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
 
 /**
@@ -12,8 +13,11 @@ import com.google.gson.reflect.TypeToken
  * @property name The name of the person associated with the face, if any.
  */
 data class FaceInfo(
+    @SerializedName("imageUri")
     val imageUri: String,
+    @SerializedName("boundingBox")
     val boundingBox: Rect,
+    @SerializedName("name")
     val name: String? = null
 )
 

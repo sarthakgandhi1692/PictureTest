@@ -2,6 +2,8 @@ package com.example.test.ui.faceDetailActivity
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.test.domain.AddUpdateFaceNameUseCase
@@ -25,13 +27,17 @@ class FaceDetailActivityViewModel
     val imageState: State<ProcessedImage?>
         get() = _imageState
 
+    private val _uiEventsLiveData = MutableLiveData<UIEvents>()
+    val uiEventsLiveData: LiveData<UIEvents>
+        get() = _uiEventsLiveData
+
     /**
      * Fetches the processed image by its URI.
      * @param uri The URI of the image to fetch.
      */
     fun getProcessedImage(uri: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val image = getProcessedImageByUriUseCase.getProcessedImageByUri(uri = uri)
+            val image = getProcessedImageByUriUseCase(uri = uri)
             _imageState.value = image
         }
     }
@@ -68,12 +74,24 @@ class FaceDetailActivityViewModel
             )
 
             // Add or update the face name using the use case
-            addUpdateFaceNameUseCase.addUpdateFaceName(
+            val result = addUpdateFaceNameUseCase(
                 processedImage = updatedImage
             )
 
             // Update the image state with the updated image
-            _imageState.value = updatedImage
+            if(result) {
+                _imageState.value = updatedImage
+                _uiEventsLiveData.postValue(UIEvents.SHOW_SUCCESS_TOAST)
+            } else {
+                _uiEventsLiveData.postValue(UIEvents.SHOW_ERROR_TOAST)
+            }
+
+
         }
+    }
+
+    sealed class UIEvents() {
+        object SHOW_SUCCESS_TOAST : UIEvents()
+        object SHOW_ERROR_TOAST : UIEvents()
     }
 }
