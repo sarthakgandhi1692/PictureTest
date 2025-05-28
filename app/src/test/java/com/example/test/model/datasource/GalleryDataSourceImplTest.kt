@@ -55,11 +55,11 @@ class GalleryDataSourceImplTest {
         every { Log.e(any(), any()) } returns 0
         every { Log.e(any(), any(), any()) } returns 0
         every { Uri.parse(any()) } returns mock(Uri::class.java)
-        every { 
+        every {
             ContentUris.withAppendedId(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 any()
-            ) 
+            )
         } returns mockk(relaxed = true)
         galleryDataSource = GalleryDataSourceImpl(faceDetector, contentResolver)
     }
@@ -89,11 +89,11 @@ class GalleryDataSourceImplTest {
         every { cursor.getLong(0) } returns imageId
         every { cursor.getLong(1) } returns dateAdded
         every { cursor.close() } just Runs
-        every { 
+        every {
             ContentUris.withAppendedId(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 imageId
-            ) 
+            )
         } returns expectedUri
 
         // When
@@ -139,7 +139,7 @@ class GalleryDataSourceImplTest {
         mockkStatic("com.example.test.base.ExtensionsKt")
         mockkStatic(InputImage::class)
         mockkStatic("kotlinx.coroutines.tasks.TasksKt")
-        
+
         every { uri.loadBitmap(contentResolver) } returns bitmap
         every { InputImage.fromBitmap(bitmap, 0) } returns inputImage
         every { faceDetector.process(inputImage) } returns task
@@ -150,7 +150,7 @@ class GalleryDataSourceImplTest {
 
         // Then
         assertEquals(faceList, result)
-        verify { 
+        verify {
             uri.loadBitmap(contentResolver)
             InputImage.fromBitmap(bitmap, 0)
             faceDetector.process(inputImage)

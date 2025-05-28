@@ -221,7 +221,7 @@ class ImageRepositoryImplTest {
         val mockUri = mock(Uri::class.java)
         val galleryImage = ImagesWithDate(mockUri, 123L)
         every { "test_uri".toUri() } returns mockUri
-        
+
         `when`(galleryDataSource.getPhotosFromGallery()).thenReturn(listOf(galleryImage))
         `when`(faceLocalDataSource.isImageProcessed(any())).thenReturn(false)
         `when`(galleryDataSource.detectFaces(mockUri)).thenReturn(listOf(mockFace))
@@ -245,7 +245,7 @@ class ImageRepositoryImplTest {
             timestamp = 123L,
             faces = emptyList()
         )
-        
+
         `when`(faceLocalDataSource.getAllProcessedImages()).thenReturn(listOf(entity))
         whenever(faceLocalDataSource.processEntitySync(entity)).thenReturn(processedImage)
 

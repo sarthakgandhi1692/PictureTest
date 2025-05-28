@@ -98,10 +98,10 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    
+
     // Robolectric
     testImplementation(libs.robolectric)
-    
+
     // MockK for Android
     testImplementation(libs.mockk.android)
     testImplementation(libs.mockk.agent)

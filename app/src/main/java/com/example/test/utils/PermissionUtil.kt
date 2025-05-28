@@ -39,10 +39,12 @@ class PermissionUtil {
                 onGranted()
                 return
             }
+
             PermissionState.LIMITED_ACCESS -> {
                 onLimitedAccess()
                 return
             }
+
             PermissionState.NO_ACCESS -> {
                 // Need to request permission
                 val permissionLauncher = activity.activityResultRegistry.register(
@@ -55,6 +57,7 @@ class PermissionUtil {
                             PermissionState.LIMITED_ACCESS -> {
                                 onLimitedAccess()
                             }
+
                             PermissionState.NO_ACCESS -> {
                                 handlePermissionDenied(
                                     activity = activity,

@@ -5,9 +5,11 @@ import android.graphics.Rect
 import com.example.test.model.local.FaceInfo
 import com.example.test.model.local.ProcessedImage
 import io.mockk.mockk
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
-import org.junit.Assert.*
 
 class ImageCacheDataSourceImplTest {
 
