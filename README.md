@@ -37,8 +37,8 @@ These are the set of current feature
 ## Code structure
 
 I've tried to follow a pretty standard Android structure:
-*   `ui`: This is where I put all my UI-related code – Activities, Composable functions, and ViewModels.
-*   `domain`: This folder holds my business logic and use cases.
+*   `ui`: This is where all UI-related code is put – Activities, Composable functions, and ViewModels.
+*   `domain`: This folder holds business logic and use cases.
 *   `model`: Here you'll find data classes (like `com.example.test.model.local.ProcessedImage`) and how data access is being handled (like in `com.example.test.model.repository.ImageRepository`).
 *   Hilt for dependency injection (`@HiltViewModel`, `@Inject`), which you'll see throughout the code.
 
