@@ -45,11 +45,7 @@ class PermissionUtil {
         val permission = getMediaPermission()
 
         // If already granted
-        if (ContextCompat.checkSelfPermission(
-                activity,
-                permission
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
+        if (isMediaPermissionGranted(activity)) {
             onGranted()
             return
         }
@@ -78,6 +74,16 @@ class PermissionUtil {
         }
 
         launcher.launch(permission)
+    }
+
+    fun isMediaPermissionGranted(
+        activity: ComponentActivity
+    ): Boolean {
+        val permission = getMediaPermission()
+        return ContextCompat.checkSelfPermission(
+            activity,
+            permission
+        ) == PackageManager.PERMISSION_GRANTED
     }
 
     /**

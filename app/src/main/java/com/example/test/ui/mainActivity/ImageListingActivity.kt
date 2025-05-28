@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -66,7 +67,10 @@ class ImageListingActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Request necessary permissions when the activity is created.
-        requestPermission()
+        if (permissionUtil.isMediaPermissionGranted(this)) {
+            viewModel.updatePermissionState(true)
+            viewModel.processImages()
+        }
         setContent {
             MainContent()
         }
@@ -134,6 +138,26 @@ class ImageListingActivity : ComponentActivity() {
                 // Display gallery grid if permission is granted.
                 if (hasPermission) {
                     GalleryFaceGrid(faceImages = faceImages)
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .background(Color.Blue)
+                                .clickable { requestPermission() }
+                                .padding(16.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.get_started),
+                                color = Color.White
+                            )
+                        }
+                    }
                 }
 
             }

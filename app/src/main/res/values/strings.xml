@@ -14,4 +14,5 @@
     <string name="image_list">Image List</string>
     <string name="name_saved_successfully">Name saved successfully</string>
     <string name="there_was_some_error_while_saving_name">There was some error while saving name</string>
+    <string name="get_started">Load images and process</string>
 </resources>

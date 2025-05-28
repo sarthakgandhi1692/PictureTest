@@ -7,10 +7,16 @@ import android.graphics.Matrix
 import android.media.ExifInterface
 import android.net.Uri
 
-// Add method and class comments
+/**
+ * Extension function to load a bitmap from a Uri, applying scaling and EXIF orientation correction.
+ *
+ * @param contentResolver The ContentResolver to use for opening the Uri.
+ * @param scalingFactor The factor by which to scale the image (e.g., 0.5 for 50% size). Defaults to 0.1f.
+ * @return The loaded and processed Bitmap, or null if loading fails.
+ */
 fun Uri.loadBitmap(
     contentResolver: ContentResolver,
-    scalingFactor: Float = 0.1f
+    scalingFactor: Float = 0.1f // Default scaling factor
 ): Bitmap? {
 
     // Step 1: Decode EXIF orientation
@@ -70,16 +76,29 @@ fun Uri.loadBitmap(
             matrix,
             true
         )
+        // The bitmap was rotated or flipped.
     } else {
+        // The bitmap did not need any orientation correction.
         scaledBitmap
     }
 }
 
+/**
+ * Calculates the `inSampleSize` for BitmapFactory.Options to decode a bitmap
+ * that is close to the requested width and height, while maintaining aspect ratio.
+ * This helps in loading a downscaled version of the image into memory, saving memory.
+ *
+ * @param originalWidth The original width of the bitmap.
+ * @param originalHeight The original height of the bitmap.
+ * @param reqWidth The desired width of the bitmap after decoding.
+ * @param reqHeight The desired height of the bitmap after decoding.
+ * @return The calculated `inSampleSize` value.
+ */
 fun calculateInSampleSize(
-    originalWidth: Int,
-    originalHeight: Int,
-    reqWidth: Int,
-    reqHeight: Int
+    originalWidth: Int, // The original width of the image
+    originalHeight: Int, // The original height of the image
+    reqWidth: Int, // The target width for the downscaled image
+    reqHeight: Int // The target height for the downscaled image
 ): Int {
     var inSampleSize = 1
     if (originalHeight > reqHeight || originalWidth > reqWidth) {
