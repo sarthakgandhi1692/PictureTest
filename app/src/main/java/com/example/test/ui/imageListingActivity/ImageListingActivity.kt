@@ -1,4 +1,4 @@
-package com.example.test.ui.mainActivity
+package com.example.test.ui.imageListingActivity
 
 import android.annotation.SuppressLint
 import android.content.Intent

@@ -1,4 +1,4 @@
-package com.example.test.ui.mainActivity
+package com.example.test.ui.imageListingActivity
 
 import android.util.Log
 import androidx.compose.runtime.State
