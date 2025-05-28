@@ -79,7 +79,7 @@ class FaceDetailActivityViewModel
             )
 
             // Update the image state with the updated image
-            if(result) {
+            if (result) {
                 _imageState.value = updatedImage
                 _uiEventsLiveData.postValue(UIEvents.SHOW_SUCCESS_TOAST)
             } else {
