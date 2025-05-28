@@ -34,15 +34,15 @@ class GalleryDataSourceImpl @Inject constructor(
         val images = mutableListOf<ImagesWithDate>()
         try {
             val projection =
-                arrayOf(MediaStore.Images.Media._ID, MediaStore.Images.Media.DATE_ADDED)
-            val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} ASC"
+                arrayOf(MediaStore.Images.Media._ID, MediaStore.Images.Media.DATE_TAKEN)
+            val sortOrder = "${MediaStore.Images.Media.DATE_TAKEN} DESC"
 
             contentResolver.query(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 projection, null, null, sortOrder
             )?.use { cursor ->
                 val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
-                val dateColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED)
+                val dateColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_TAKEN)
                 while (cursor.moveToNext()) {
                     val id = cursor.getLong(idColumn)
                     val dateAdded = cursor.getLong(dateColumn) * 1000L

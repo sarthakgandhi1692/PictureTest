@@ -13,7 +13,7 @@ interface FaceDao {
      * Retrieves all images with associated faces from the database.
      * @return A list of [ImageWithFacesEntity] objects.
      */
-    @Query("SELECT * FROM faceImages ORDER BY timestamp ASC")
+    @Query("SELECT * FROM faceImages ORDER BY timestamp DESC")
     suspend fun getAllImages(): List<ImageWithFacesEntity>
 
     /**
