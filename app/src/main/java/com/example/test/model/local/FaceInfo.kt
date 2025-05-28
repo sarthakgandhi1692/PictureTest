@@ -25,16 +25,24 @@ data class FaceInfo(
  * Type converter for Room database.
  */
 class Converters {
-    private val gson = Gson()
 
     @TypeConverter
-    fun fromFaceInfoList(faces: List<FaceInfo>): String {
-        return gson.toJson(faces)
+    fun fromFaceInfoList(faceInfoList: List<FaceInfo>?): String? {
+        if (faceInfoList == null) {
+            return null
+        }
+        val gson = Gson()
+        return gson.toJson(faceInfoList)
     }
 
     @TypeConverter
-    fun toFaceInfoList(data: String): List<FaceInfo> {
+    fun toFaceInfoList(faceInfoListString: String?): List<FaceInfo>? {
+        if (faceInfoListString == null) {
+            return null
+        }
+        val gson = Gson()
+        // This is likely where your FaceInfo.kt:37 points to, or a similar line
         val listType = object : TypeToken<List<FaceInfo>>() {}.type
-        return gson.fromJson(data, listType)
+        return gson.fromJson(faceInfoListString, listType)
     }
 }
