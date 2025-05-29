@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.content.ContentUris
 import android.net.Uri
 import android.provider.MediaStore
+import android.util.Log
 import com.example.test.base.loadBitmap
 import com.example.test.model.local.ImagesWithDate
 import com.google.mlkit.vision.common.InputImage
@@ -71,8 +72,16 @@ class GalleryDataSourceImpl @Inject constructor(
      * @throws Exception If an error occurs during face detection.
      */
     override suspend fun detectFaces(uri: Uri): List<Face> {
-        val bitmap = uri.loadBitmap(contentResolver = contentResolver) ?: return emptyList()
-        val image = InputImage.fromBitmap(bitmap, 0)
-        return detector.process(image).await()
+        try {
+            val bitmap = uri.loadBitmap(contentResolver = contentResolver) ?: return emptyList()
+            val image = InputImage.fromBitmap(bitmap, 0)
+            if (image.width < 32 || image.height < 32) {
+                Log.e("ImageDebug", "Image is too small for face detection!")
+                return emptyList()
+            }
+            return detector.process(image).await()
+        } catch (e: Exception) {
+            return emptyList()
+        }
     }
 }
