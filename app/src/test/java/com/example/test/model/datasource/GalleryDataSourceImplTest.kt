@@ -142,6 +142,10 @@ class GalleryDataSourceImplTest {
 
         every { uri.loadBitmap(contentResolver) } returns bitmap
         every { InputImage.fromBitmap(bitmap, 0) } returns inputImage
+        every { inputImage.width } returns 100
+        every { inputImage.height } returns 100
+        every { bitmap.isRecycled } returns false
+        every { bitmap.recycle() } just Runs
         every { faceDetector.process(inputImage) } returns task
         coEvery { task.await() } returns faceList
 
@@ -150,12 +154,14 @@ class GalleryDataSourceImplTest {
 
         // Then
         assertEquals(faceList, result)
-        verify {
+        verify(exactly = 1) {
             uri.loadBitmap(contentResolver)
             InputImage.fromBitmap(bitmap, 0)
             faceDetector.process(inputImage)
+            bitmap.isRecycled
+            bitmap.recycle()
         }
-        coVerify { task.await() }
+        coVerify(exactly = 1) { task.await() }
     }
 
     @Test
@@ -172,4 +178,5 @@ class GalleryDataSourceImplTest {
         assertTrue(result.isEmpty())
         verify(exactly = 0) { faceDetector.process(ofType(InputImage::class)) }
     }
+
 } 

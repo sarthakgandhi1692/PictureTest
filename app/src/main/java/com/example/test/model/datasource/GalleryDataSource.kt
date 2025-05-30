@@ -76,10 +76,13 @@ class GalleryDataSourceImpl @Inject constructor(
             val bitmap = uri.loadBitmap(contentResolver = contentResolver) ?: return emptyList()
             val image = InputImage.fromBitmap(bitmap, 0)
             if (image.width < 32 || image.height < 32) {
-                Log.e("ImageDebug", "Image is too small for face detection!")
                 return emptyList()
             }
-            return detector.process(image).await()
+            val result = detector.process(image).await()
+            if (!bitmap.isRecycled) {
+                bitmap.recycle()
+            }
+            return result
         } catch (e: Exception) {
             return emptyList()
         }
