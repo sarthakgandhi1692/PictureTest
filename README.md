@@ -42,6 +42,13 @@ I've tried to follow a pretty standard Android structure:
 *   `model`: Here you'll find data classes (like `com.example.test.model.local.ProcessedImage`) and how data access is being handled (like in `com.example.test.model.repository.ImageRepository`).
 *   Hilt for dependency injection (`@HiltViewModel`, `@Inject`), which you'll see throughout the code.
 
+## Improvement that can be done:
+
+* Currently the images are scaled down to a factor of 0.1f for faster processing, this can be scaled up by adding parallel processing of images.
+* Currently the images that arrive from database are not paginated, Pagination can be added to it.
+* We are using LRU cache currently, but we can save the processed images as files in internal storage(Trade off: Use extra space for images that are already present on device).
+  
+
 ## Demo link
 
 Link - https://drive.google.com/drive/folders/15U8rnxQY9k3edHc1a1gJpo1rhdILpYKW?usp=drive_link
