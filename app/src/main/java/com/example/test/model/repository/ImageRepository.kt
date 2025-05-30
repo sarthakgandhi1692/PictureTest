@@ -11,6 +11,9 @@ import com.example.test.model.local.FaceInfo
 import com.example.test.model.local.ProcessedImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asFlow
@@ -170,20 +173,24 @@ class ImageRepositoryImpl @Inject constructor(
      * @throws Exception If an error occurs during processing.
      * @see GalleryDataSource
      */
-    override suspend fun processAllImages() {
+    override suspend fun processAllImages() = coroutineScope {
         val images = galleryDataSource.getPhotosFromGallery()
-        images.forEach {
-            if (faceLocalDataSource.isImageProcessed(it.uri.toString()).not()) {
-                val faces = galleryDataSource.detectFaces(it.uri)
-                val faceRects = faces.map { face ->
-                    face.boundingBox
+        images.chunked(4).forEach { chunk ->
+            chunk.map { it ->
+                async(Dispatchers.IO) {
+                    if (faceLocalDataSource.isImageProcessed(it.uri.toString()).not()) {
+                        val faces = galleryDataSource.detectFaces(it.uri)
+                        val faceRects = faces.map { face ->
+                            face.boundingBox
+                        }
+                        insertImageAndFaces(
+                            uri = it.uri.toString(),
+                            dateAdded = it.timestamp,
+                            faceRects = faceRects
+                        )
+                    }
                 }
-                insertImageAndFaces(
-                    uri = it.uri.toString(),
-                    dateAdded = it.timestamp,
-                    faceRects = faceRects
-                )
-            }
+            }.awaitAll()
         }
     }
 
